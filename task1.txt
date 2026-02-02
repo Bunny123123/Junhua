@@ -1,0 +1,163 @@
+crea una aplicacion simple de escritorio en java
+
+
+
+crea una aplicacion simple de escritorio en java
+
+
+Listo. Te dejé una app de escritorio Java (Swing) minimal que abre una ventana con saludo, botón contador, barra de estado y menú “Archivo > Salir”.
+
+Código: src/com/example/simpleapp/Main.java:1
+Guía: README.md:1
+Cómo ejecutar (PowerShell)
+
+Crear salida y compilar: mkdir -Force out; javac -d out src\com\example\simpleapp\Main.java
+Ejecutar: java -cp out com.example.simpleapp.Main
+Notas rápidas
+
+Requiere JDK 8+ (java -version, javac -version).
+Si javac no se reconoce, agrega el bin del JDK al PATH o configura JAVA_HOME.
+¿Quieres que agregue un script .ps1 para compilar/ejecutar con un solo comando o prefieres un proyecto Maven/Gradle?
+
+Te comento que creo que lo más apropiado es que basemos el TFG en tecnologías XML (en particular, XML en sí, y XSLT, el lenguaje para transformación de documentos XML).
+
+No sé si conoces estas tecnologías. Si no es así, el primer paso será familiarizarte con ellas. A este respecto, en W3Schools hay un tutorial sobre el tema: https://www.w3schools.com/xml/. A mí, en particular, me gustan los tutoriales de ese sitio, y por eso suelo recomendarlos. En este tutorial se introduce XML en sí, como un lenguaje para representar documentos semiestructurados, así como tecnologías asociados (en particular, XSLT).
+
+La aplicación de procesamiento la desarrollaremos incrementalmente. De esta forma, la primera versión será un programa con una interfaz gráfica sencilla que:
+Permitirá elegir una descripción de la colección digital. Dicha descripción será un archivo .zip, en el que aparecerá una descripción de la estructura, como un documento XML, y luego los distintos archivos locales de la colección.
+Permitirá elegir una transformación, especificada en XSLT.
+Permitirá transformar la colección con dicha transformación.
+Permitirá realizar una visualización sencilla de las colecciones implicadas (a efectos de validar las transformaciones).
+Inicialmente, la transformación afectará únicamente a la estructura; cuando tengamos la versión inicial, veremos cómo extenderla para poder procesar también contenidos.
+
+Yo creo que lo más simple es construir la aplicación como una aplicación JAVA de escritorio. A este respecto, será conveniente también que te familiarices con la forma de procesar XML en Java, así como de aplicar transformaciones XSLT. En https://www.oracle.com/java/technologies/jaxp-introduction.html se describe el marco Java estándar para hacer esto.
+
+La idea es comenzar a trabajar en el desarrollo de la primera versión de la aplicación en septiembre. Por tanto, si hasta entonces puedes familiarizarte con las tecnologías, sería perfecto. Así mismo, si deseas ir adelantando el desarrollo de la aplicación, a continuación te indico un posible formato XML para la descripción de las colecciones.
+
+Un saludo,
+
+JL
+
+P.D.- En cuanto a la descripción de las colecciones, podemos partir de documentos XML con el siguiente formato:
+
+<dc> <o id="..."> .... </o> <o id="..."> .... </o> ... </dc>
+Es decir, el documento describirá la colección (elemento dc) como una lista de objetos (elementos o). Cada objeto tendrá, así mismo, un identificador único (atributo id), lo que permitirá establecer relaciones entre ellos.
+
+En cuando a la descripción de cada objeto, podrá ser algo como:
+
+<o id="..."> .....metadatos.... .....recursos.... .....relaciones.... </o>
+La sección de ....metadatos.... podrá ser un fragmento XML arbitrario, que no incluya contenido 'mixto' (es decir, el texto estará siempre delimitado mediante elementos).
+La sección de ....recursos... podrá ser algo como:
+<rs>
+r1 ... rk
+</rs>
+donde cada ri describe un recurso. Para ello, cada ri podrá ser, bien:
+<lr name="...">..... camino a recurso local...</lr>
+o bien
+<url name="....">.... url a recurso remoto ... </url>
+
+El valor del atributo 'name' es el nombre dado para distinguir el recurso en el objeto.
+
+Por su parte, la sección de relaciones podrá ser algo como:
+<rels>
+<rel ref="...." name="...."/>
+<rel ref="...." name="..."/>
+</rels>
+
+Cada <ref ref="..." name="..."/> referirá a un objeto de la colección (el id del objeto referido se pondrá como valor del atributo ref, y con name se nombrará la relación).
+
+Cada una de las secciones es opcional (es decir, podemos tener objetos sin relaciones con otros objetos, sin recursos, incluso sin metadatos...).
+
+A modo de ejemplo, a continuación pongo una pequeña colección de libros y autores (solo pongo un libro, y un autor):
+
+<dc> <o id="l1"> <libro> <titulo>El resplandor</titulo> <editorial>Bruguera</editorial> <idioma>ES</idioma> </libro> <rs> <lr name="texto">resources/r1.pdf</lr> <ulr name="descripcion">https://es.wikipedia.org/wiki/El_resplandor_(novela)</url> </rs> <rels> <rel id="a1" name="autor"/> </rels> </o> <o id="a1"> <autor> <nombre>Stephen King</nombre> <nacionalidad>US</nacionalidad> </autor> <rs> <url name="wiki">https://es.wikipedia.org/wiki/Stephen_King</url> </rs> </o> </dc>
+
+He preparado una primera versión funcional de la app de escritorio en Java centrada en XML/XSLT como planteas. Permite cargar una colección desde un ZIP, elegir una hoja XSLT (JAXP), aplicar la transformación sobre la estructura y visualizar tanto la colección como el resultado.
+
+Qué hace ahora
+
+Carga ZIP de colección: extrae a temp, detecta el primer .xml y lo muestra bonito.
+Vista en árbol: lista o (por id), metadatos, recursos (lr/url) y relaciones (rel ref/name). Tolera ligeras variaciones del ejemplo (p.ej. id en lugar de ref).
+XSLT: permite seleccionar .xsl/.xslt y previsualiza el resultado de la transformación.
+Estado/limpieza: limpia carpeta temporal y reinicia la UI.
+Archivos clave
+
+src/com/example/simpleapp/Main.java:1 — UI: selección ZIP/XSLT, árbol, preview y acciones.
+src/com/example/simpleapp/XmlUtils.java:1 — Parseo DOM, pretty print y transformación con JAXP.
+src/com/example/simpleapp/ZipUtils.java:1 — Extracción segura del ZIP.
+samples/identity.xsl:1 — XSLT identidad (para validar pipeline).
+samples/collection_example/collection.xml:1 — Colección ejemplo (libro/autor).
+scripts/make-sample-zip.ps1:1 — Crea samples\collection.zip desde la carpeta ejemplo.
+Cómo compilar y ejecutar (PowerShell)
+
+Compilar: mkdir -Force out; javac -d out src\com\example\simpleapp\*.java
+Ejecutar: java -cp out com.example.simpleapp.Main
+Crear ZIP de ejemplo: pwsh scripts\make-sample-zip.ps1 → samples\collection.zip
+Cargar en la app ese ZIP y samples\identity.xsl para probar.
+Notas y siguientes pasos
+
+El XML se asume con raíz dc y objetos o; podemos añadir validación (XSD/Relax NG).
+Podemos permitir elegir qué XML usar si el ZIP contiene varios.
+Exportar a archivo el resultado XSLT (ahora lo muestra en panel).
+Cuando pasemos a “procesar contenidos” además de estructura, podemos añadir lógica para copiar/transformar recursos, validar rutas, etc.
+¿Quieres que añada validación XSD del formato propuesto y un botón para “Exportar resultado” a un archivo?
+
+como creamos el zip de ejemplo
+
+
+Opción rápida (PowerShell): Compress-Archive -Path samples/collection_example/* -DestinationPath samples/collection.zip -Force
+Script incluido: pwsh scripts\make-sample-zip.ps1 (crea samples\collection.zip)
+Estructura que empaqueta: samples/collection_example con collection.xml y resources\readme.txt
+Luego, en la app:
+
+Carga samples\collection.zip con “Elegir ZIP”.
+Para probar XSLT, usa samples\identity.xsl.
+explica en detalle el funcionamiento de esta app
+
+
+Funcionamiento General
+
+La UI se compone de una ventana principal con barra de herramientas, árbol de navegación y panel de texto. Se configura en src/com/example/simpleapp/Main.java:17–81, donde se definen los botones “Elegir ZIP”, “Elegir XSLT”, “Transformar” y “Limpiar”, además del JTree para la colección y el JTextArea para la vista XML.
+El estado de la sesión se mantiene en campos privados (selectedZip, selectedXslt, extractedDir, collectionDoc) declarados en Main.java:23–26, lo que permite coordinar las acciones de carga, transformación y limpieza.
+Carga de la colección
+
+Al pulsar “Elegir ZIP”, chooseZip() (Main.java:82–91) abre un JFileChooser, y si el usuario aprueba, delega en loadZip() (Main.java:103–141).
+loadZip() crea un directorio temporal, extrae el ZIP y busca el primer XML dentro. La extracción la hace ZipUtils.extractZip() (src/com/example/simpleapp/ZipUtils.java:12–31), que recorre todas las entradas del ZIP, crea las carpetas necesarias y copia cada archivo, rechazando rutas que intenten salir del directorio destino.
+El XML encontrado se parsea con XmlUtils.parse() (src/com/example/simpleapp/XmlUtils.java:22–30) usando DOM. El contenido formateado se muestra en el panel de texto con XmlUtils.toPrettyString() (XmlUtils.java:32–40) y se construye la vista en árbol mediante buildTree() (Main.java:161–223), que interpreta los elementos <o>, los metadatos (cualquier hijo distinto de rs y rels), los recursos y las relaciones.
+Selección de XSLT y transformación
+
+“Elegir XSLT” dispara chooseXslt() (Main.java:93–101), que guarda la ruta de la hoja seleccionada.
+“Transformar” ejecuta transform() (Main.java:137–142), que verifica que haya XML cargado y XSLT elegida. Luego invoca XmlUtils.transform() (XmlUtils.java:42–49), que crea un Transformer JAXP a partir de la hoja XSLT y devuelve un Document DOM con el resultado. El XML transformado se muestra en el panel derecho y se actualiza la barra de estado.
+Gestión de errores y limpieza
+
+Cualquier problema durante la carga o transformación se envía a setError() (Main.java:225–228), que actualiza la barra de estado y muestra un JOptionPane.
+“Limpiar” llama a clearState() (Main.java:144–152), reinicia las referencias, restaura el árbol a su nodo raíz y borra la carpeta temporal mediante clearExtractedDir() (Main.java:154–158), que delega en XmlUtils.deleteDirectoryRecursively() (XmlUtils.java:52–60) para eliminar todos los ficheros creados durante la extracción.
+Así, la app cubre el flujo básico: seleccionar una colección comprimida, inspeccionar su XML, aplicar transformaciones XSLT estándar con JAXP y revisar el resultado, todo desde una interfaz gráfica sencilla orientada al formato propuesto para el TFG.
+
+Ahora mismo la transformacion no hace nada no?
+
+
+Exacto: con la hoja samples/identity.xsl el resultado es idéntico porque esa XSLT implementa la transformación identidad (copia el XML tal cual). El flujo de transformación está funcionando, pero hasta que uses una XSLT que haga cambios visibles (por ejemplo, filtrar objetos, renombrar nodos, generar un HTML, etc.), la vista final será la misma que el XML original.
+
+la visualizacion del zip en arbol solo muestra el primer archivo xml y lo muestra?
+
+
+Sí. Ahora mismo, al cargar el ZIP se hace lo siguiente:
+
+loadZip() (src/com/example/simpleapp/Main.java:103) extrae el ZIP y usa Files.walk(...).findFirst() para localizar solo el primer archivo con extensión .xml (Main.java:108).
+Ese documento se parsea y guardo en collectionDoc, y con él construyo el árbol (buildTree() en Main.java:161). El árbol refleja la estructura de ese XML (objetos <o>, metadatos, recursos, relaciones), no el listado completo de ficheros dentro del ZIP.
+Así que, aunque el ZIP contenga varios XML u otros recursos, la vista actual solo muestra el primer XML encontrado. Si quieres ver otro documento habría que ampliar la lógica para listar los XML detectados y permitir elegir cuál cargar, o bien apoyarse en metadatos dentro del ZIP para saber cuál es el “principal”.
+
+
+
+
+
+Auto context
+
+
+Local
+
+Agent (full access)
+
+gpt-5-codex
+high

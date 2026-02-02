@@ -1,0 +1,25 @@
+<dc>
+<obj id="l1">
+<libro>
+<titulo>El resplandor</titulo>
+<editorial>Bruguera</editorial>
+<idioma>ES</idioma>
+</libro>
+<rs>
+<lr name="texto">resources/readme.txt</lr>
+<url name="descripcion">https://es.wikipedia.org/wiki/El_resplandor_(novela)</url>
+</rs>
+<rels>
+<rel ref="a1" name="autor"/>
+</rels>
+</obj>
+<o id="a1">
+<autor>
+<nombre>Stephen King</nombre>
+<nacionalidad>US</nacionalidad>
+</autor>
+<rs>
+<url name="wiki">https://es.wikipedia.org/wiki/Stephen_King</url>
+</rs>
+</o>
+</dc>

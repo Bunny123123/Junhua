@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      Esquema sencillo para las colecciones del procesador.
+      Raiz dc con objetos o/@id, recursos rs (lr/url) y relaciones rels/rel.
+      Los metadatos se permiten como cualquier subarbol arbitrario.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="dc" type="dcType"/>
+
+  <xs:complexType name="dcType">
+    <xs:sequence>
+      <xs:element name="o" type="objectType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="objectType">
+    <xs:sequence>
+      <!-- Permite cualquier mezcla de metadatos, rs y rels (validando cuando hay definiciones conocidas) -->
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- Declaraciones globales para que xs:any en modo lax pueda validar rs/rels -->
+  <xs:element name="rs" type="resourceSetType"/>
+  <xs:element name="rels" type="relationSetType"/>
+
+  <xs:complexType name="resourceSetType">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="lr" type="resourceRefType"/>
+      <xs:element name="url" type="resourceRefType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="resourceRefType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="relationSetType">
+    <xs:sequence>
+      <xs:element name="rel" type="relationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="relationType">
+    <xs:attribute name="ref" type="xs:string" use="optional"/>
+    <xs:attribute name="id" type="xs:string" use="optional"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

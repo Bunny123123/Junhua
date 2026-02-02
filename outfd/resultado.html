@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="UTF-8">
+        <title>Resumen de coleccion</title>
+        <style type="text/css">
+          body { font-family: Arial, sans-serif; margin: 2rem; background-color: #f8f8f8; }
+          h1 { margin-top: 0; }
+          section.objeto { background: #fff; border: 1px solid #ddd; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px; }
+          section.objeto h2 { margin-top: 0; }
+          .metadatos ul { list-style: none; margin: 0.25rem 0 0.75rem 0; padding-left: 1rem; }
+          .metadatos li { margin-bottom: 0.35rem; }
+          .metadatos strong { display: inline-block; min-width: 6rem; }
+          ul.recursos, ul.relaciones { margin: 0.25rem 0 0.75rem 0; padding-left: 1.25rem; }
+          ul.recursos li, ul.relaciones li { margin-bottom: 0.25rem; }
+          .metadatos ul ul { border-left: 2px solid #e0e0e0; margin-left: 0.5rem; padding-left: 0.75rem; }
+        </style>
+    </head>
+    <body>
+        <h1>Resumen de coleccion</h1>
+        <section class="objeto">
+            <h2>Objeto l1</h2>
+            <h3>Metadatos</h3>
+            <div class="metadatos">
+                <div class="meta-entry">
+                    <strong>libro</strong>
+                    <ul>
+                        <li>
+                            <strong>titulo</strong>: El resplandor
+                        </li>
+                        <li>
+                            <strong>editorial</strong>: Bruguera
+                        </li>
+                        <li>
+                            <strong>idioma</strong>: ES
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <h3>Recursos</h3>
+            <ul class="recursos">
+                <li>
+                    <strong>lr</strong> (texto): resources/readme.txt
+                </li>
+                <li>
+                    <strong>url</strong> (descripcion): https://es.wikipedia.org/wiki/El_resplandor_(novela)
+                </li>
+            </ul>
+            <h3>Relaciones</h3>
+            <ul class="relaciones">
+                <li>
+                    Tipo <strong>autor</strong> con a1
+                </li>
+            </ul>
+        </section>
+        <section class="objeto">
+            <h2>Objeto a1</h2>
+            <h3>Metadatos</h3>
+            <div class="metadatos">
+                <div class="meta-entry">
+                    <strong>autor</strong>
+                    <ul>
+                        <li>
+                            <strong>nombre</strong>: Stephen King
+                        </li>
+                        <li>
+                            <strong>nacionalidad</strong>: US
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <h3>Recursos</h3>
+            <ul class="recursos">
+                <li>
+                    <strong>url</strong> (wiki): https://es.wikipedia.org/wiki/Stephen_King
+                </li>
+            </ul>
+        </section>
+    </body>
+</html>

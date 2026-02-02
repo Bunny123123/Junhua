@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><dc>
+  <o id="l1">
+    <libro>
+      <titulo>El resplandor</titulo>
+      <editorial>Bruguera</editorial>
+      <idioma>ES</idioma>
+    </libro>
+    <rs>
+      <lr name="texto">resources/readme.txt</lr>
+      <lr name="imagen"/>
+      <url name="descripcion">https://es.wikipedia.org/wiki/El_resplandor_(novela)</url>
+    </rs>
+    <rels>
+      <rel name="autor" ref="a1"/>
+    </rels>
+    <stats recursos="3" relaciones="1">Hola, l1!</stats>
+  </o>
+  <o id="a1">
+    <autor>
+      <nombre>Stephen King</nombre>
+      <nacionalidad>US</nacionalidad>
+    </autor>
+    <rs>
+      <url name="wiki">https://es.wikipedia.org/wiki/Stephen_King</url>
+    </rs>
+    <stats recursos="1" relaciones="0">Hola, a1!</stats>
+  </o>
+</dc>
