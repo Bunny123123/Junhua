@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -22,6 +22,7 @@ public final class ExtensionComponents {
     }
 
     public static ExtensionElementHandler get(String name) {
+        //System.out.println("hemos estado aqui");
         return HANDLERS.get(name);
     }
 

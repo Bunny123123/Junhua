@@ -1,10 +1,5 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0"
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:app="http://junhua.com/extensions"
-                exclude-result-prefixes="app"
-                extension-element-prefixes="app">
-  <xsl:output method="xml" encoding="UTF-8" indent="yes"/>
+<?xml version="1.0" encoding="UTF-8"?><xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:app="http://xml.apache.org/xalan/java/simpleapp.generated.AppExtensionBridge" exclude-result-prefixes="app" extension-element-prefixes="app" version="1.0">
+  <xsl:output encoding="UTF-8" indent="yes" method="xml"/>
   <xsl:strip-space elements="*"/>
   <xsl:param name="target-image-format" select="'png'"/>
 
@@ -21,8 +16,7 @@
     <xsl:copy>
       <xsl:apply-templates select="@*"/>
       <xsl:apply-templates select="node()"/>
-      <stats recursos="{count(rs/*)}"
-             relaciones="{count(rels/rel)}">
+      <stats recursos="{count(rs/*)}" relaciones="{count(rels/rel)}">
         <app:saludo select="@id"/>
       </stats>
     </xsl:copy>

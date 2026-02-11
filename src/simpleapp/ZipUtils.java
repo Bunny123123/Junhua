@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

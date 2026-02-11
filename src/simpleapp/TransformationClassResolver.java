@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

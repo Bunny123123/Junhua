@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.apache.xalan.extensions.XSLProcessorContext;
 import org.apache.xalan.templates.ElemExtensionCall;
@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -25,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Funciones auxiliares expuestas a las hojas XSLT mediante namespaces de extension.
- * Con JAXP/Xalan pueden invocarse con xmlns:app="java:com.example.simpleapp.XsltExtensions".
+ * Con JAXP/Xalan pueden invocarse con xmlns:app="java:simpleapp.XsltExtensions".
  */
 public final class XsltExtensions {
     private static final Set<Path> convertedFiles = Collections.synchronizedSet(new LinkedHashSet<>());
@@ -74,6 +76,10 @@ public final class XsltExtensions {
      */
     public static void changeImageFormat(XSLProcessorContext context, ElemExtensionCall element)
             throws TransformerException {
+        boolean debug = Boolean.getBoolean("xslt.ext.debug");
+        if (debug) {
+            System.out.println("[xslt.ext] changeImageFormat invoked");
+        }
         String format = normalizeFormat(readAttribute("format", context, element));
         if (isBlank(format)) {
             throw new TransformerException("El atributo 'format' es obligatorio en change-image-format");
@@ -91,18 +97,36 @@ public final class XsltExtensions {
 
         Path baseDir = resolveBaseDir(context);
         Path input = resolvePath(sourcePath, baseDir);
+        if (debug) {
+            System.out.println("[xslt.ext] source=" + sourcePath);
+            System.out.println("[xslt.ext] baseDir=" + baseDir);
+            System.out.println("[xslt.ext] input=" + input);
+        }
         if (!Files.exists(input)) {
             throw new TransformerException("No se encontro el fichero de imagen: " + input);
         }
 
         Path output = resolveOutputPath(readAttribute("output", context, element),
                 readAttribute("suffix", context, element), input, format, baseDir);
+        if (debug) {
+            System.out.println("[xslt.ext] output=" + output);
+        }
 
-        convertImageWithMagick(input, output, format);
+        convertImageWithMagick(input, output, format, debug);
+        if (debug) {
+            boolean exists = Files.exists(output);
+            long size = 0L;
+            try { size = exists ? Files.size(output) : 0L; } catch (Exception ignored) {}
+            System.out.println("[xslt.ext] converted exists=" + exists + " size=" + size);
+        }
         registerConvertedFile(output);
 
         try {
-            context.outputToResultTree(context.getStylesheet(), emitPath(output, baseDir));
+            String emitted = emitPath(output, baseDir);
+            writeTextToResult(context, emitted);
+            if (debug) {
+                System.out.println("[xslt.ext] changeImageFormat output: " + emitted);
+            }
         } catch (TransformerException e) {
             throw e;
         } catch (Exception e) {
@@ -110,7 +134,7 @@ public final class XsltExtensions {
         }
     }
 
-    private static void convertImageWithMagick(Path input, Path output, String format)
+    private static void convertImageWithMagick(Path input, Path output, String format, boolean debug)
             throws TransformerException {
         try {
             Path parent = output.getParent();
@@ -123,30 +147,50 @@ public final class XsltExtensions {
 
         List<String[]> commands = buildMagickCommands(input, output);
         TransformerException lastError = null;
+        String lastLog = null;
         for (String[] command : commands) {
             try {
-                runMagickCommand(command, format);
+                if (debug) {
+                    System.out.println("[xslt.ext] trying command: " + String.join(" ", command));
+                }
+                lastLog = runMagickCommand(command, format);
+                if (debug && lastLog != null && !lastLog.isBlank()) {
+                    System.out.println("[xslt.ext] magick output: " + lastLog.trim());
+                }
                 return;
             } catch (TransformerException e) {
                 lastError = e;
+                if (debug) {
+                    System.out.println("[xslt.ext] command failed: " + e.getMessage());
+                    if (lastLog != null && !lastLog.isBlank()) {
+                        System.out.println("[xslt.ext] magick output: " + lastLog.trim());
+                    }
+                }
             }
         }
         if (lastError != null) {
-            throw lastError;
+            // Fallback: intento con ImageIO (sin ImageMagick)
+            try {
+                convertWithImageIO(input, output, format);
+                return;
+            } catch (Exception e) {
+                throw lastError;
+            }
         }
         throw new TransformerException("No se encontro un comando valido de ImageMagick para convertir la imagen.");
     }
 
     private static List<String[]> buildMagickCommands(Path input, Path output) {
         List<String[]> commands = new ArrayList<>();
-        commands.add(new String[]{"magick", input.toString(), output.toString()});
+        String magickExe = resolveMagickExecutable();
+        commands.add(new String[]{magickExe, input.toString(), output.toString()});
         if (!isWindows()) {
             commands.add(new String[]{"convert", input.toString(), output.toString()});
         }
         return commands;
     }
 
-    private static void runMagickCommand(String[] command, String format) throws TransformerException {
+    private static String runMagickCommand(String[] command, String format) throws TransformerException {
         Process process;
         try {
             process = new ProcessBuilder(command)
@@ -182,6 +226,7 @@ public final class XsltExtensions {
             Thread.currentThread().interrupt();
             throw new TransformerException("La conversion de imagen fue interrumpida", e);
         }
+        return log;
     }
 
     private static String readProcessOutput(InputStream stream) throws IOException {
@@ -199,9 +244,50 @@ public final class XsltExtensions {
         return os != null && os.toLowerCase(Locale.ROOT).contains("win");
     }
 
+    private static String resolveMagickExecutable() {
+        String configured = System.getProperty("xslt.magick");
+        if (configured != null && !configured.trim().isEmpty()) {
+            return configured.trim();
+        }
+        return "magick";
+    }
+
+    private static void convertWithImageIO(Path input, Path output, String format) throws Exception {
+        String fmt = normalizeFormat(format);
+        if ("jpg".equals(fmt)) {
+            fmt = "jpeg";
+        }
+        BufferedImage img = ImageIO.read(input.toFile());
+        if (img == null) {
+            throw new IllegalArgumentException("ImageIO no pudo leer la imagen: " + input);
+        }
+        boolean ok = ImageIO.write(img, fmt, output.toFile());
+        if (!ok) {
+            throw new IllegalArgumentException("ImageIO no soporta escribir formato: " + fmt);
+        }
+    }
+
     private static void registerConvertedFile(Path output) {
         if (output == null) return;
         convertedFiles.add(output.normalize());
+    }
+
+    private static void writeTextToResult(XSLProcessorContext context, String text)
+            throws TransformerException {
+        if (text == null) return;
+        try {
+            context.outputToResultTree(context.getStylesheet(), text);
+            return;
+        } catch (Exception ignored) {
+        }
+        try {
+            org.apache.xml.serializer.SerializationHandler handler =
+                    context.getTransformer().getResultTreeHandler();
+            char[] chars = text.toCharArray();
+            handler.characters(chars, 0, chars.length);
+        } catch (Exception e) {
+            throw new TransformerException("No se pudo escribir en el arbol de resultado", e);
+        }
     }
 
     public static void resetConvertedFiles() {

@@ -7,12 +7,12 @@ crea una aplicacion simple de escritorio en java
 
 Listo. Te dejé una app de escritorio Java (Swing) minimal que abre una ventana con saludo, botón contador, barra de estado y menú “Archivo > Salir”.
 
-Código: src/com/example/simpleapp/Main.java:1
+Código: src/simpleapp/Main.java:1
 Guía: README.md:1
 Cómo ejecutar (PowerShell)
 
-Crear salida y compilar: mkdir -Force out; javac -d out src\com\example\simpleapp\Main.java
-Ejecutar: java -cp out com.example.simpleapp.Main
+Crear salida y compilar: mkdir -Force out; javac -d out src\simpleapp\Main.java
+Ejecutar: java -cp out simpleapp.Main
 Notas rápidas
 
 Requiere JDK 8+ (java -version, javac -version).
@@ -82,16 +82,16 @@ XSLT: permite seleccionar .xsl/.xslt y previsualiza el resultado de la transform
 Estado/limpieza: limpia carpeta temporal y reinicia la UI.
 Archivos clave
 
-src/com/example/simpleapp/Main.java:1 — UI: selección ZIP/XSLT, árbol, preview y acciones.
-src/com/example/simpleapp/XmlUtils.java:1 — Parseo DOM, pretty print y transformación con JAXP.
-src/com/example/simpleapp/ZipUtils.java:1 — Extracción segura del ZIP.
+src/simpleapp/Main.java:1 — UI: selección ZIP/XSLT, árbol, preview y acciones.
+src/simpleapp/XmlUtils.java:1 — Parseo DOM, pretty print y transformación con JAXP.
+src/simpleapp/ZipUtils.java:1 — Extracción segura del ZIP.
 samples/identity.xsl:1 — XSLT identidad (para validar pipeline).
 samples/collection_example/collection.xml:1 — Colección ejemplo (libro/autor).
 scripts/make-sample-zip.ps1:1 — Crea samples\collection.zip desde la carpeta ejemplo.
 Cómo compilar y ejecutar (PowerShell)
 
-Compilar: mkdir -Force out; javac -d out src\com\example\simpleapp\*.java
-Ejecutar: java -cp out com.example.simpleapp.Main
+Compilar: mkdir -Force out; javac -d out src\simpleapp\*.java
+Ejecutar: java -cp out simpleapp.Main
 Crear ZIP de ejemplo: pwsh scripts\make-sample-zip.ps1 → samples\collection.zip
 Cargar en la app ese ZIP y samples\identity.xsl para probar.
 Notas y siguientes pasos
@@ -117,13 +117,13 @@ explica en detalle el funcionamiento de esta app
 
 Funcionamiento General
 
-La UI se compone de una ventana principal con barra de herramientas, árbol de navegación y panel de texto. Se configura en src/com/example/simpleapp/Main.java:17–81, donde se definen los botones “Elegir ZIP”, “Elegir XSLT”, “Transformar” y “Limpiar”, además del JTree para la colección y el JTextArea para la vista XML.
+La UI se compone de una ventana principal con barra de herramientas, árbol de navegación y panel de texto. Se configura en src/simpleapp/Main.java:17–81, donde se definen los botones “Elegir ZIP”, “Elegir XSLT”, “Transformar” y “Limpiar”, además del JTree para la colección y el JTextArea para la vista XML.
 El estado de la sesión se mantiene en campos privados (selectedZip, selectedXslt, extractedDir, collectionDoc) declarados en Main.java:23–26, lo que permite coordinar las acciones de carga, transformación y limpieza.
 Carga de la colección
 
 Al pulsar “Elegir ZIP”, chooseZip() (Main.java:82–91) abre un JFileChooser, y si el usuario aprueba, delega en loadZip() (Main.java:103–141).
-loadZip() crea un directorio temporal, extrae el ZIP y busca el primer XML dentro. La extracción la hace ZipUtils.extractZip() (src/com/example/simpleapp/ZipUtils.java:12–31), que recorre todas las entradas del ZIP, crea las carpetas necesarias y copia cada archivo, rechazando rutas que intenten salir del directorio destino.
-El XML encontrado se parsea con XmlUtils.parse() (src/com/example/simpleapp/XmlUtils.java:22–30) usando DOM. El contenido formateado se muestra en el panel de texto con XmlUtils.toPrettyString() (XmlUtils.java:32–40) y se construye la vista en árbol mediante buildTree() (Main.java:161–223), que interpreta los elementos <o>, los metadatos (cualquier hijo distinto de rs y rels), los recursos y las relaciones.
+loadZip() crea un directorio temporal, extrae el ZIP y busca el primer XML dentro. La extracción la hace ZipUtils.extractZip() (src/simpleapp/ZipUtils.java:12–31), que recorre todas las entradas del ZIP, crea las carpetas necesarias y copia cada archivo, rechazando rutas que intenten salir del directorio destino.
+El XML encontrado se parsea con XmlUtils.parse() (src/simpleapp/XmlUtils.java:22–30) usando DOM. El contenido formateado se muestra en el panel de texto con XmlUtils.toPrettyString() (XmlUtils.java:32–40) y se construye la vista en árbol mediante buildTree() (Main.java:161–223), que interpreta los elementos <o>, los metadatos (cualquier hijo distinto de rs y rels), los recursos y las relaciones.
 Selección de XSLT y transformación
 
 “Elegir XSLT” dispara chooseXslt() (Main.java:93–101), que guarda la ruta de la hoja seleccionada.
@@ -144,7 +144,7 @@ la visualizacion del zip en arbol solo muestra el primer archivo xml y lo muestr
 
 Sí. Ahora mismo, al cargar el ZIP se hace lo siguiente:
 
-loadZip() (src/com/example/simpleapp/Main.java:103) extrae el ZIP y usa Files.walk(...).findFirst() para localizar solo el primer archivo con extensión .xml (Main.java:108).
+loadZip() (src/simpleapp/Main.java:103) extrae el ZIP y usa Files.walk(...).findFirst() para localizar solo el primer archivo con extensión .xml (Main.java:108).
 Ese documento se parsea y guardo en collectionDoc, y con él construyo el árbol (buildTree() en Main.java:161). El árbol refleja la estructura de ese XML (objetos <o>, metadatos, recursos, relaciones), no el listado completo de ficheros dentro del ZIP.
 Así que, aunque el ZIP contenga varios XML u otros recursos, la vista actual solo muestra el primer XML encontrado. Si quieres ver otro documento habría que ampliar la lógica para listar los XML detectados y permitir elegir cuál cargar, o bien apoyarse en metadatos dentro del ZIP para saber cuál es el “principal”.
 

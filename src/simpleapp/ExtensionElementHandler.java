@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.apache.xalan.extensions.XSLProcessorContext;
 import org.apache.xalan.templates.ElemExtensionCall;

@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -24,6 +24,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,10 +35,15 @@ import java.util.Set;
  * Genera una clase puente compatible con Xalan y una copia de la XSLT con el namespace esperado.
  */
 public final class XsltExtensionPreprocessor {
-    public static final String CUSTOM_EXTENSION_NAMESPACE = "urn:app-extension";
-    private static final String GENERATED_PACKAGE = "com.example.simpleapp.generated";
+    public static final String CUSTOM_EXTENSION_NAMESPACE = "http://junhua.com/extensions";
+    private static final String GENERATED_PACKAGE = "simpleapp.generated";
     private static final String GENERATED_SIMPLE_CLASS = "AppExtensionBridge";
     private static final String GENERATED_FQN = GENERATED_PACKAGE + "." + GENERATED_SIMPLE_CLASS;
+    private static final String DEBUG_KEEP_DIR_PROP = "xslt.bridge.debug";
+    private static final String BRIDGE_DIR_PROP = "xslt.bridge.dir";
+    private static final Path DEFAULT_BRIDGE_DIR = Paths.get("out", "xslt-bridge");
+    private static final String BRIDGE_CLASSES_DIR_PROP = "xslt.bridge.classes.dir";
+    private static final Path DEFAULT_CLASSES_DIR = Paths.get("out");
 
     private XsltExtensionPreprocessor() {
     }
@@ -63,16 +69,17 @@ public final class XsltExtensionPreprocessor {
         }
         checkHandlers(elements);
 
-        Path workDir = Files.createTempDirectory("xslt_ext_bridge_");
+        Path workDir = resolveBridgeDir();
+        Files.createDirectories(workDir);
         Path rewrittenXslt = workDir.resolve(deriveXsltName(xsltPath));
         rewriteNamespace(doc, prefix, rewrittenXslt);
 
         Path javaFile = writeBridgeSource(elements, workDir);
-        Path classesDir = workDir.resolve("classes");
+        Path classesDir = resolveBridgeClassesDir();
         compileBridge(javaFile, classesDir);
         ClassLoader loader = buildClassLoader(classesDir);
 
-        return new PreprocessedXslt(rewrittenXslt, loader, workDir);
+        return new PreprocessedXslt(rewrittenXslt, loader, workDir, true);
     }
 
     private static Document parse(Path xsltPath) throws Exception {
@@ -149,6 +156,9 @@ public final class XsltExtensionPreprocessor {
         if (!replaced) {
             throw new IllegalStateException("No se pudo reemplazar el namespace del prefijo " + prefix);
         }
+        // Actualiza los nodos de extension para que queden en el nuevo namespace
+        String newNs = buildXalanNamespace(GENERATED_FQN);
+        updateExtensionElementNamespaces(doc, prefix, newNs);
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer t = tf.newTransformer();
         t.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -160,6 +170,28 @@ public final class XsltExtensionPreprocessor {
 
     private static String buildXalanNamespace(String className) {
         return "http://xml.apache.org/xalan/java/" + className;
+    }
+
+    private static void updateExtensionElementNamespaces(Document doc, String prefix, String newNs) {
+        if (doc == null || prefix == null || newNs == null) return;
+        Element root = doc.getDocumentElement();
+        if (root == null) return;
+        renameExtensionNodes(doc, root, prefix, newNs);
+    }
+
+    private static void renameExtensionNodes(Document doc, Node node, String prefix, String newNs) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            String p = node.getPrefix();
+            String ns = node.getNamespaceURI();
+            if (prefix.equals(p) && CUSTOM_EXTENSION_NAMESPACE.equals(ns)) {
+                doc.renameNode(node, newNs, node.getNodeName());
+            }
+        }
+        Node child = node.getFirstChild();
+        while (child != null) {
+            renameExtensionNodes(doc, child, prefix, newNs);
+            child = child.getNextSibling();
+        }
     }
 
     private static String deriveXsltName(Path original) {
@@ -184,8 +216,8 @@ public final class XsltExtensionPreprocessor {
         sb.append("import org.apache.xalan.extensions.XSLProcessorContext;\n");
         sb.append("import org.apache.xalan.templates.ElemExtensionCall;\n");
         sb.append("import javax.xml.transform.TransformerException;\n");
-        sb.append("import com.example.simpleapp.ExtensionComponents;\n");
-        sb.append("import com.example.simpleapp.ExtensionElementHandler;\n\n");
+        sb.append("import simpleapp.ExtensionComponents;\n");
+        sb.append("import simpleapp.ExtensionElementHandler;\n\n");
         sb.append("public final class ").append(GENERATED_SIMPLE_CLASS).append(" {\n");
         sb.append("  private ").append(GENERATED_SIMPLE_CLASS).append("() {}\n\n");
         sb.append("  private static ExtensionElementHandler handler(String name) throws TransformerException {\n");
@@ -234,6 +266,23 @@ public final class XsltExtensionPreprocessor {
         return new URLClassLoader(new URL[]{url}, XsltExtensionPreprocessor.class.getClassLoader());
     }
 
+    private static Path resolveBridgeDir() {
+        String configured = System.getProperty(BRIDGE_DIR_PROP);
+        if (configured != null && !configured.trim().isEmpty()) {
+            return Paths.get(configured.trim());
+        }
+        return DEFAULT_BRIDGE_DIR;
+    }
+
+    private static Path resolveBridgeClassesDir() {
+        String configured = System.getProperty(BRIDGE_CLASSES_DIR_PROP);
+        if (configured != null && !configured.trim().isEmpty()) {
+            return Paths.get(configured.trim());
+        }
+        return DEFAULT_CLASSES_DIR;
+    }
+
+
     /**
      * Resultado del preprocesado: xslt reescrita y classloader con la clase puente generada.
      */
@@ -241,11 +290,13 @@ public final class XsltExtensionPreprocessor {
         private final Path xsltPath;
         private final ClassLoader classLoader;
         private final Path workDir;
+        private final boolean keepFiles;
 
-        public PreprocessedXslt(Path xsltPath, ClassLoader classLoader, Path workDir) {
+        public PreprocessedXslt(Path xsltPath, ClassLoader classLoader, Path workDir, boolean keepFiles) {
             this.xsltPath = xsltPath;
             this.classLoader = classLoader;
             this.workDir = workDir;
+            this.keepFiles = keepFiles;
         }
 
         public Path getXsltPath() {
@@ -257,10 +308,17 @@ public final class XsltExtensionPreprocessor {
         }
 
         public void cleanup() {
+            if (keepFiles || Boolean.getBoolean(DEBUG_KEEP_DIR_PROP)) {
+                return;
+            }
             try {
                 XmlUtils.deleteDirectoryRecursively(workDir);
             } catch (Exception ignored) {
             }
+        }
+
+        public Path getWorkDir() {
+            return workDir;
         }
     }
 }

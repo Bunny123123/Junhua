@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -14,6 +14,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.prefs.Preferences;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
+    private static final String PREF_LAST_DIR = "lastChooserDir";
     private final JFrame frame = new JFrame("Procesador XML/XSLT - Colecciones");
     private final JLabel status = new JLabel("Listo");
     private final JTextArea previewArea = new JTextArea();
@@ -33,8 +35,11 @@ public class Main {
     private Path extractedDir;
     private Document collectionDoc;
     private String lastResultText;
+    private File lastChooserDir;
+    private final Preferences prefs = Preferences.userNodeForPackage(Main.class);
 
     public Main() {
+        loadLastChooserDir();
         JPanel content = new JPanel(new BorderLayout(8, 8));
         content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
@@ -104,8 +109,13 @@ public class Main {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Seleccionar ZIP de colección");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ZIP", "zip"));
+        if (lastChooserDir != null) {
+            chooser.setCurrentDirectory(lastChooserDir);
+        }
         if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             selectedZip = chooser.getSelectedFile();
+            lastChooserDir = selectedZip.getParentFile();
+            persistLastChooserDir();
             status.setText("ZIP seleccionado: " + selectedZip.getName());
             loadZip(selectedZip);
         }
@@ -115,10 +125,29 @@ public class Main {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Seleccionar hoja XSLT");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XSL/XSLT", "xsl", "xslt"));
+        if (lastChooserDir != null) {
+            chooser.setCurrentDirectory(lastChooserDir);
+        }
         if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             selectedXslt = chooser.getSelectedFile();
+            lastChooserDir = selectedXslt.getParentFile();
+            persistLastChooserDir();
             status.setText("XSLT seleccionado: " + selectedXslt.getName());
         }
+    }
+
+    private void loadLastChooserDir() {
+        String saved = prefs.get(PREF_LAST_DIR, null);
+        if (saved == null || saved.isBlank()) return;
+        File dir = new File(saved);
+        if (dir.isDirectory()) {
+            lastChooserDir = dir;
+        }
+    }
+
+    private void persistLastChooserDir() {
+        if (lastChooserDir == null) return;
+        prefs.put(PREF_LAST_DIR, lastChooserDir.getAbsolutePath());
     }
 
     private void loadZip(File zip) {
@@ -179,6 +208,14 @@ public class Main {
                         ? result.getDocumentElement().getNodeName()
                         : "desconocido";
                 status.setText("Transformacion aplicada (sin validacion, raiz: " + rootName + ")");
+            }
+
+            Path bridgeDir = XmlUtils.getLastBridgeDir();
+            if (bridgeDir != null) {
+                JOptionPane.showMessageDialog(frame,
+                        "Puente generado en:\n" + bridgeDir.toAbsolutePath(),
+                        "Puente XSLT",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (Exception ex) {
             setError("Error al transformar: " + ex.getMessage());
@@ -412,6 +449,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        //System.out.println(System.getProperty("java.io.tmpdir")); System.exit(1);
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
         SwingUtilities.invokeLater(() -> new Main().showUI());
     }

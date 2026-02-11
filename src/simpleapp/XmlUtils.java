@@ -1,4 +1,4 @@
-package com.example.simpleapp;
+package simpleapp;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 public class XmlUtils {
     private static final Path DEFAULT_COLLECTION_SCHEMA = Paths.get("samples", "collection.xsd");
     private static Schema collectionSchema;
+    private static volatile Path lastBridgeDir;
 
     public static Document parse(Path xmlPath) throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -66,6 +67,7 @@ public class XmlUtils {
         XsltExtensionPreprocessor.PreprocessedXslt preprocessed =
                 XsltExtensionPreprocessor.preprocessIfNeeded(xsltPath);
         Path effectiveXslt = preprocessed != null ? preprocessed.getXsltPath() : xsltPath;
+        lastBridgeDir = preprocessed != null ? preprocessed.getWorkDir() : null;
 
         ClassLoader originalCl = Thread.currentThread().getContextClassLoader();
         ClassLoader bridgeCl = preprocessed != null ? preprocessed.getClassLoader() : null;
@@ -90,6 +92,10 @@ public class XmlUtils {
                 preprocessed.cleanup();
             }
         }
+    }
+
+    public static Path getLastBridgeDir() {
+        return lastBridgeDir;
     }
 
     public static boolean isCollectionDocument(Document doc) {
