@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugins bundleDir="bundle">
+  <!-- Handlers internos (sin jar) -->
+  <plugin element="saludo" class="simpleapp.XsltExtensions" method="saludo" />
+  <plugin element="changeImageFormat" class="simpleapp.XsltExtensions" method="changeImageFormat" />
+  <plugin element="miExtension" class="com.ejemplo.plugins.MiPlugin" method="ejecutar" jar="mi-plugin.jar" />
+</plugins>

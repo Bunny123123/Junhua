@@ -450,6 +450,13 @@ public class Main {
 
     public static void main(String[] args) {
         //System.out.println(System.getProperty("java.io.tmpdir")); System.exit(1);
+        PluginRegistryLoader.LoadReport pluginReport = PluginRegistryLoader.ensureDefaultLoaded();
+        System.out.println("[plugins] " + pluginReport.summary());
+        if (pluginReport.isLoaded()) {
+            for (String entry : pluginReport.entries()) {
+                System.out.println("[plugins] " + entry);
+            }
+        }
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
         SwingUtilities.invokeLater(() -> new Main().showUI());
     }

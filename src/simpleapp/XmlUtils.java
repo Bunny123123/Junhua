@@ -64,6 +64,7 @@ public class XmlUtils {
     }
 
     public static Document transform(Document source, Path xsltPath) throws Exception {
+        PluginRegistryLoader.ensureDefaultLoaded();
         XsltExtensionPreprocessor.PreprocessedXslt preprocessed =
                 XsltExtensionPreprocessor.preprocessIfNeeded(xsltPath);
         Path effectiveXslt = preprocessed != null ? preprocessed.getXsltPath() : xsltPath;

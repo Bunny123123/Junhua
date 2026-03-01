@@ -17,12 +17,8 @@ public final class AppExtensionBridge {
     return h;
   }
 
-  public static void saludo(XSLProcessorContext ctx, ElemExtensionCall elem) throws TransformerException {
-    handler("saludo").invoke(ctx, elem);
-  }
-
-  public static void changeImageFormat(XSLProcessorContext ctx, ElemExtensionCall elem) throws TransformerException {
-    handler("changeImageFormat").invoke(ctx, elem);
+  public static void miExtension(XSLProcessorContext ctx, ElemExtensionCall elem) throws TransformerException {
+    handler("miExtension").invoke(ctx, elem);
   }
 
 }

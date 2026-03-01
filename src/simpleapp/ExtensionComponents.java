@@ -9,24 +9,33 @@ import java.util.Map;
  * Las claves son los local-name de los elementos en el namespace propio.
  */
 public final class ExtensionComponents {
-    private static final Map<String, ExtensionElementHandler> HANDLERS;
+    private static final Map<String, ExtensionElementHandler> HANDLERS = new LinkedHashMap<>();
 
-    static {
-        Map<String, ExtensionElementHandler> map = new LinkedHashMap<>();
-        map.put("saludo", XsltExtensions::saludo);
-        map.put("changeImageFormat", XsltExtensions::changeImageFormat);
-        HANDLERS = Collections.unmodifiableMap(map);
-    }
+    static { registerDefaults(); }
 
     private ExtensionComponents() {
     }
 
-    public static ExtensionElementHandler get(String name) {
-        //System.out.println("hemos estado aqui");
+    private static void registerDefaults() {
+        register("saludo", XsltExtensions::saludo);
+        register("changeImageFormat", XsltExtensions::changeImageFormat);
+    }
+
+    public static synchronized void register(String name, ExtensionElementHandler handler) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del elemento no puede estar vacio");
+        }
+        if (handler == null) {
+            throw new IllegalArgumentException("El handler no puede ser null");
+        }
+        HANDLERS.put(name.trim(), handler);
+    }
+
+    public static synchronized ExtensionElementHandler get(String name) {
         return HANDLERS.get(name);
     }
 
-    public static Map<String, ExtensionElementHandler> snapshot() {
-        return HANDLERS;
+    public static synchronized Map<String, ExtensionElementHandler> snapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(HANDLERS));
     }
 }

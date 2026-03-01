@@ -3,7 +3,7 @@
 Aplicación de escritorio para cargar una colección descrita en XML desde un `.zip`, elegir una transformación XSLT y previsualizar el resultado. Muestra una vista en árbol de la colección (objetos, recursos y relaciones) y un panel de texto con el XML (original o transformado).
 
 
-
+//meter saludo y changeimageformat a un jar externo, en plugin, mi-plugin.jar que contenga otros jar, y plugins.xml añadir dependencias
 ## Compilar y ejecutar (Windows/PowerShell)
 
 1) Compilar a la carpeta `out`:
@@ -47,6 +47,45 @@ Parametros utiles:
 -Dxslt.bridge.dir=RUTA                # carpeta donde se guarda la XSLT reescrita y el puente
 -Dxslt.bridge.classes.dir=RUTA        # carpeta donde se compilan las clases generadas
 -Dxslt.ext.debug=true                 # log de ejecucion de elementos de extension
+-Dxslt.plugins.config=RUTA            # ruta al plugins.xml (por defecto plugins/plugins.xml)
+-Dxslt.plugins.bundle.dir=RUTA        # carpeta extra con jars de plugins
+```
+
+## Plugins por JAR (plugins.xml + bundle)
+- En el arranque, `Main` carga `plugins/plugins.xml` y registra dinamicamente handlers de extensiones.
+- Cada entrada define la tabla: `elemento XSLT -> clase#metodo`.
+- Los `.jar` se pueden cargar de 3 formas:
+- `bundleDir` en la raiz `<plugins ...>`.
+- elementos `<bundle path="..."/>`.
+- atributo `jar` dentro de cada `<plugin .../>`.
+- Rutas relativas se resuelven respecto a la carpeta donde esta `plugins.xml`.
+- Si `jar` es solo nombre de archivo (sin carpeta), se resuelve automaticamente dentro de `bundleDir`.
+
+Ejemplo (`plugins/plugins.xml`):
+```xml
+<plugins bundleDir="bundle">
+  <plugin element="saludo" class="simpleapp.XsltExtensions" method="saludo" />
+  <plugin element="changeImageFormat" class="simpleapp.XsltExtensions" method="changeImageFormat" />
+  <plugin element="miExtension" class="com.ejemplo.plugins.MiPlugin" method="ejecutar" jar="mi-plugin.jar" />
+</plugins>
+```
+
+Contrato del metodo plugin:
+- Firma esperada: `(XSLProcessorContext, ElemExtensionCall)`.
+- Puede ser `static` o de instancia.
+- Alternativamente, la clase puede implementar `ExtensionElementHandler` usando el metodo `invoke`.
+- Si la clase implementa `ExtensionElementHandler`, el atributo `method` es opcional.
+
+Demo plugin externo:
+```
+pwsh scripts\build-plugin-example.ps1
+```
+Genera `plugins\bundle\mi-plugin.jar` desde `plugins\sample-plugin\src\com\ejemplo\plugins\MiPlugin.java`.
+Luego puedes transformar con `samples\collection_plugin_demo.xsl`, que invoca `<app:miExtension/>`.
+
+Verificacion end-to-end automatica:
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ```
 
 ## Conversion de imagenes
@@ -75,6 +114,7 @@ La UI tolera ligeras variaciones (p. ej., si en `rel` viniera `id` en lugar de `
 - `samples/identity.xsl:1` - Transformacion identidad (no cambia el XML).
 - `samples/collection_to_html.xsl:1` - Convierte la coleccion en HTML con metadatos, recursos y relaciones.
 - `samples/collection_stats.xsl:1` - Mantiene el XML, a?ade un nodo `<stats>` con totales y demuestra elementos de extension `<app:saludo/>` y `<app:changeImageFormat/>`.
+- `samples/collection_plugin_demo.xsl:1` - Demo de plugin externo usando `<app:miExtension/>` cargado desde JAR.
 - `samples/collection.xsd:1` - Esquema XSD utilizado para validar las colecciones.
 - `samples/collection_example/collection.xml:1` - Coleccion de ejemplo (libro y autor) con un recurso local y URLs.
 
@@ -88,6 +128,8 @@ Esto genera `samples\collection.zip`.
 - `src/simpleapp/Main.java:1` — UI: carga ZIP, selección XSLT, árbol y previsualización.
 - `src/simpleapp/ZipUtils.java:1` — Extracción segura de ZIP.
 - `src/simpleapp/XmlUtils.java:1` — Parseo DOM, pretty print y transformación XSLT (JAXP).
+- `src/simpleapp/PluginRegistryLoader.java:1` - carga del registro de plugins desde XML/JAR.
+- `plugins/plugins.xml:1` - tabla de mapeo `elemento -> clase#metodo`.
 
 ## Proximos pasos sugeridos
 - Soportar variantes de esquema (p. ej. Relax NG o multiples XSD segun version).
