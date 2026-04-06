@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><records root="dc" source="collection">
+  <record id="movie-matrix" type="pelicula">
+    <title>The Matrix</title>
+    <field group="pelicula" label="titulo" name="titulo" path="pelicula/titulo">The Matrix</field>
+    <field group="pelicula" label="anio" name="anio" path="pelicula/anio">1999</field>
+    <field group="pelicula" label="generos" name="generos" path="pelicula/generos">Action|Sci-Fi|Thriller</field>
+    <field group="pelicula" label="duracion" name="duracion" path="pelicula/duracion">136 min</field>
+    <field group="pelicula" label="tono" name="tono" path="pelicula/tono">Cyberpunk filosofico</field>
+    <field group="pelicula" label="sinopsis" name="sinopsis" path="pelicula/sinopsis">Neo descubre que su realidad es una simulacion digital y entra en una guerra por despertar a otros.</field>
+    <resource name="poster" type="lr">resources/poster-matrix.png</resource>
+    <resource name="imdb" type="url">https://www.imdb.com/title/tt0133093/</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/The_Matrix</resource>
+    <relation name="autor" ref="author-wachowskis"/>
+    <relation name="personaje" ref="char-neo"/>
+    <relation name="personaje" ref="char-trinity"/>
+  </record>
+  <record id="movie-starwars" type="pelicula">
+    <title>Star Wars: Episode IV - A New Hope</title>
+    <field group="pelicula" label="titulo" name="titulo" path="pelicula/titulo">Star Wars: Episode IV - A New Hope</field>
+    <field group="pelicula" label="anio" name="anio" path="pelicula/anio">1977</field>
+    <field group="pelicula" label="generos" name="generos" path="pelicula/generos">Action|Adventure|Sci-Fi</field>
+    <field group="pelicula" label="duracion" name="duracion" path="pelicula/duracion">121 min</field>
+    <field group="pelicula" label="tono" name="tono" path="pelicula/tono">Space opera clasica</field>
+    <field group="pelicula" label="sinopsis" name="sinopsis" path="pelicula/sinopsis">Una aventura galactica donde un joven piloto termina convirtiendose en la chispa de la rebelion.</field>
+    <resource name="poster" type="lr">resources/poster-starwars.png</resource>
+    <resource name="imdb" type="url">https://www.imdb.com/title/tt0076759/</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Star_Wars_(film)</resource>
+    <relation name="autor" ref="author-george-lucas"/>
+    <relation name="personaje" ref="char-luke"/>
+    <relation name="personaje" ref="char-vader"/>
+  </record>
+  <record id="movie-pulpfiction" type="pelicula">
+    <title>Pulp Fiction</title>
+    <field group="pelicula" label="titulo" name="titulo" path="pelicula/titulo">Pulp Fiction</field>
+    <field group="pelicula" label="anio" name="anio" path="pelicula/anio">1994</field>
+    <field group="pelicula" label="generos" name="generos" path="pelicula/generos">Crime|Drama|Thriller</field>
+    <field group="pelicula" label="duracion" name="duracion" path="pelicula/duracion">154 min</field>
+    <field group="pelicula" label="tono" name="tono" path="pelicula/tono">Noir pop fragmentado</field>
+    <field group="pelicula" label="sinopsis" name="sinopsis" path="pelicula/sinopsis">Historias cruzadas, humor negro y personajes memorables dentro de una estructura quebrada a proposito.</field>
+    <resource name="poster" type="lr">resources/poster-pulpfiction.png</resource>
+    <resource name="imdb" type="url">https://www.imdb.com/title/tt0110912/</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Pulp_Fiction</resource>
+    <relation name="autor" ref="author-tarantino"/>
+    <relation name="personaje" ref="char-vincent"/>
+    <relation name="personaje" ref="char-jules"/>
+  </record>
+  <record id="author-wachowskis" type="autor">
+    <title>Lana y Lilly Wachowski</title>
+    <field group="autor" label="nombre" name="nombre" path="autor/nombre">Lana y Lilly Wachowski</field>
+    <field group="autor" label="rol" name="rol" path="autor/rol">Direccion y guion</field>
+    <field group="autor" label="nacionalidad" name="nacionalidad" path="autor/nacionalidad">US</field>
+    <field group="autor" label="nota" name="nota" path="autor/nota">Su imaginario mezcla filosofia, tecnologia y accion con una identidad visual inmediata.</field>
+    <resource name="retrato" type="lr">resources/author-wachowskis.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/The_Wachowskis</resource>
+    <relation name="creo" ref="movie-matrix"/>
+  </record>
+  <record id="author-george-lucas" type="autor">
+    <title>George Lucas</title>
+    <field group="autor" label="nombre" name="nombre" path="autor/nombre">George Lucas</field>
+    <field group="autor" label="rol" name="rol" path="autor/rol">Direccion y worldbuilding</field>
+    <field group="autor" label="nacionalidad" name="nacionalidad" path="autor/nacionalidad">US</field>
+    <field group="autor" label="nota" name="nota" path="autor/nota">Construyo una aventura mitica capaz de expandirse a personajes, planetas y generaciones enteras.</field>
+    <resource name="retrato" type="lr">resources/author-george-lucas.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/George_Lucas</resource>
+    <relation name="creo" ref="movie-starwars"/>
+  </record>
+  <record id="author-tarantino" type="autor">
+    <title>Quentin Tarantino</title>
+    <field group="autor" label="nombre" name="nombre" path="autor/nombre">Quentin Tarantino</field>
+    <field group="autor" label="rol" name="rol" path="autor/rol">Direccion y guion</field>
+    <field group="autor" label="nacionalidad" name="nacionalidad" path="autor/nacionalidad">US</field>
+    <field group="autor" label="nota" name="nota" path="autor/nota">Su cine convierte dialogos extensos, referencias pop y violencia estilizada en una marca reconocible.</field>
+    <resource name="retrato" type="lr">resources/author-tarantino.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Quentin_Tarantino</resource>
+    <relation name="creo" ref="movie-pulpfiction"/>
+  </record>
+  <record id="char-neo" type="personaje">
+    <title>Neo</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Neo</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Elegido</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">The Matrix</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Un programador que aprende a leer las grietas del sistema y a romper sus reglas.</field>
+    <resource name="caricatura" type="lr">resources/char-neo.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Neo_(The_Matrix)</resource>
+    <relation name="apareceEn" ref="movie-matrix"/>
+    <relation name="creadoPor" ref="author-wachowskis"/>
+  </record>
+  <record id="char-trinity" type="personaje">
+    <title>Trinity</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Trinity</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Guia tactica</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">The Matrix</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Precisa, veloz y estrategica, es la energia que sostiene al grupo en cada decision critica.</field>
+    <resource name="caricatura" type="lr">resources/char-trinity.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Trinity_(The_Matrix)</resource>
+    <relation name="apareceEn" ref="movie-matrix"/>
+    <relation name="creadoPor" ref="author-wachowskis"/>
+  </record>
+  <record id="char-luke" type="personaje">
+    <title>Luke Skywalker</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Luke Skywalker</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Heroe clasico</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">Star Wars</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Empieza como piloto impulsivo y termina convertido en simbolo de esperanza para la rebelion.</field>
+    <resource name="caricatura" type="lr">resources/char-luke.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Luke_Skywalker</resource>
+    <relation name="apareceEn" ref="movie-starwars"/>
+    <relation name="creadoPor" ref="author-george-lucas"/>
+  </record>
+  <record id="char-vader" type="personaje">
+    <title>Darth Vader</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Darth Vader</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Villano iconico</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">Star Wars</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Una silueta diseñada para imponer respeto incluso antes de pronunciar una sola frase.</field>
+    <resource name="caricatura" type="lr">resources/char-vader.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Darth_Vader</resource>
+    <relation name="apareceEn" ref="movie-starwars"/>
+    <relation name="creadoPor" ref="author-george-lucas"/>
+  </record>
+  <record id="char-vincent" type="personaje">
+    <title>Vincent Vega</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Vincent Vega</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Antiheroe cool</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">Pulp Fiction</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Un criminal elegante e inseguro al mismo tiempo, atrapado entre rutina y desastre.</field>
+    <resource name="caricatura" type="lr">resources/char-vincent.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Vincent_Vega</resource>
+    <relation name="apareceEn" ref="movie-pulpfiction"/>
+    <relation name="creadoPor" ref="author-tarantino"/>
+  </record>
+  <record id="char-jules" type="personaje">
+    <title>Jules Winnfield</title>
+    <field group="personaje" label="nombre" name="nombre" path="personaje/nombre">Jules Winnfield</field>
+    <field group="personaje" label="arquetipo" name="arquetipo" path="personaje/arquetipo">Predicador ambiguo</field>
+    <field group="personaje" label="universo" name="universo" path="personaje/universo">Pulp Fiction</field>
+    <field group="personaje" label="descripcion" name="descripcion" path="personaje/descripcion">Una presencia magnetica que convierte cada escena en cita y cada dialogo en manifiesto.</field>
+    <resource name="caricatura" type="lr">resources/char-jules.png</resource>
+    <resource name="wiki" type="url">https://en.wikipedia.org/wiki/Jules_Winnfield</resource>
+    <relation name="apareceEn" ref="movie-pulpfiction"/>
+    <relation name="creadoPor" ref="author-tarantino"/>
+  </record>
+</records>

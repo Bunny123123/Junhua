@@ -1,0 +1,7 @@
+﻿Dataset: MedVision Synthetic Radiography
+Purpose: academic case study for XML collections and record viewer demos
+Privacy: all patients and findings are synthetic
+Studies:
+- CXR-001 normal chest screening
+- CXR-002 right lower lobe opacity
+- XR-003 distal forearm trauma

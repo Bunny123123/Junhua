@@ -11,14 +11,7 @@ import java.util.Map;
 public final class ExtensionComponents {
     private static final Map<String, ExtensionElementHandler> HANDLERS = new LinkedHashMap<>();
 
-    static { registerDefaults(); }
-
     private ExtensionComponents() {
-    }
-
-    private static void registerDefaults() {
-        register("saludo", XsltExtensions::saludo);
-        register("changeImageFormat", XsltExtensions::changeImageFormat);
     }
 
     public static synchronized void register(String name, ExtensionElementHandler handler) {

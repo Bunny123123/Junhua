@@ -1,0 +1,5 @@
+Synthetic medical dataset case study
+- domain: radiography and triage workflows
+- content: 3 anonymized synthetic studies, linked patients and findings
+- local assets: generated PNG illustrations, heatmaps and short text reports
+- purpose: demonstrate XML collection ingestion, generic record export and viewer navigation without real clinical data

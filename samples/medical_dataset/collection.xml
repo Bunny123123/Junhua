@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dc>
+  <o id="dataset-medvision-demo">
+    <dataset>
+      <titulo>MedVision Synthetic Radiography</titulo>
+      <dominio>imagen-medica</dominio>
+      <modalidades>radiografia-torax|radiografia-extremidades</modalidades>
+      <casos>3</casos>
+      <anonimizado>si</anonimizado>
+      <descripcion>Coleccion sintetica para el nuevo caso de estudio medico. Reune radiografias simuladas, informes cortos y relaciones entre pacientes anonimizados, estudios y hallazgos.</descripcion>
+    </dataset>
+    <rs>
+      <lr name="imagen">resources/dataset-cover.png</lr>
+      <lr name="documentacion">resources/dataset-notes.txt</lr>
+    </rs>
+    <rels>
+      <rel ref="study-cxr-001" name="incluye"/>
+      <rel ref="study-cxr-002" name="incluye"/>
+      <rel ref="study-xr-003" name="incluye"/>
+    </rels>
+  </o>
+
+  <o id="study-cxr-001">
+    <estudio>
+      <titulo>CXR-001 Screening chest normal</titulo>
+      <modalidad>Radiografia</modalidad>
+      <anatomia>Torax</anatomia>
+      <proyeccion>PA</proyeccion>
+      <split>train</split>
+      <prioridad>baja</prioridad>
+      <etiquetas>normal|screening</etiquetas>
+      <informe>Campos pulmonares bien expandidos, sin consolidaciones y sin signos agudos visibles.</informe>
+    </estudio>
+    <rs>
+      <lr name="imagen">resources/study-cxr-001.png</lr>
+      <lr name="informe">resources/report-cxr-001.txt</lr>
+      <lr name="heatmap">resources/heatmap-cxr-001.png</lr>
+    </rs>
+    <rels>
+      <rel ref="dataset-medvision-demo" name="perteneceA"/>
+      <rel ref="patient-sim-001" name="paciente"/>
+      <rel ref="finding-normal" name="hallazgo"/>
+    </rels>
+  </o>
+
+  <o id="study-cxr-002">
+    <estudio>
+      <titulo>CXR-002 Right lower lobe opacity</titulo>
+      <modalidad>Radiografia</modalidad>
+      <anatomia>Torax</anatomia>
+      <proyeccion>AP</proyeccion>
+      <split>validation</split>
+      <prioridad>media</prioridad>
+      <etiquetas>pneumonia|opacity</etiquetas>
+      <informe>Opacidad focal en base pulmonar derecha con patron compatible con consolidacion. Sin derrame pleural evidente.</informe>
+    </estudio>
+    <rs>
+      <lr name="imagen">resources/study-cxr-002.png</lr>
+      <lr name="informe">resources/report-cxr-002.txt</lr>
+      <lr name="heatmap">resources/heatmap-cxr-002.png</lr>
+    </rs>
+    <rels>
+      <rel ref="dataset-medvision-demo" name="perteneceA"/>
+      <rel ref="patient-sim-002" name="paciente"/>
+      <rel ref="finding-pneumonia" name="hallazgo"/>
+    </rels>
+  </o>
+
+  <o id="study-xr-003">
+    <estudio>
+      <titulo>XR-003 Distal forearm trauma</titulo>
+      <modalidad>Radiografia</modalidad>
+      <anatomia>Antebrazo</anatomia>
+      <proyeccion>Lateral</proyeccion>
+      <split>test</split>
+      <prioridad>alta</prioridad>
+      <etiquetas>fracture|trauma</etiquetas>
+      <informe>Discontinuidad cortical distal del radio con discreta angulacion. Ulna sin alteraciones relevantes.</informe>
+    </estudio>
+    <rs>
+      <lr name="imagen">resources/study-xr-003.png</lr>
+      <lr name="informe">resources/report-xr-003.txt</lr>
+      <lr name="heatmap">resources/heatmap-xr-003.png</lr>
+    </rs>
+    <rels>
+      <rel ref="dataset-medvision-demo" name="perteneceA"/>
+      <rel ref="patient-sim-003" name="paciente"/>
+      <rel ref="finding-fracture" name="hallazgo"/>
+    </rels>
+  </o>
+
+  <o id="patient-sim-001">
+    <paciente>
+      <nombre>Paciente SYN-001</nombre>
+      <sexo>F</sexo>
+      <edadRango>35-44</edadRango>
+      <contexto>control-ambulatorio</contexto>
+      <nota>Perfil sintetico y anonimizado usado para validacion de flujos de ingestion.</nota>
+    </paciente>
+    <rs>
+      <lr name="retrato">resources/patient-sim-001.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-cxr-001" name="tieneEstudio"/>
+    </rels>
+  </o>
+
+  <o id="patient-sim-002">
+    <paciente>
+      <nombre>Paciente SYN-002</nombre>
+      <sexo>M</sexo>
+      <edadRango>55-64</edadRango>
+      <contexto>urgencias-respiratorio</contexto>
+      <nota>Paciente ficticio creado para mostrar una opacidad unilateral y su relacion con un hallazgo toracico.</nota>
+    </paciente>
+    <rs>
+      <lr name="retrato">resources/patient-sim-002.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-cxr-002" name="tieneEstudio"/>
+    </rels>
+  </o>
+
+  <o id="patient-sim-003">
+    <paciente>
+      <nombre>Paciente SYN-003</nombre>
+      <sexo>F</sexo>
+      <edadRango>18-24</edadRango>
+      <contexto>trauma-deportivo</contexto>
+      <nota>Registro sintetico con traumatismo distal de antebrazo para pruebas del caso de estudio.</nota>
+    </paciente>
+    <rs>
+      <lr name="retrato">resources/patient-sim-003.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-xr-003" name="tieneEstudio"/>
+    </rels>
+  </o>
+
+  <o id="finding-normal">
+    <hallazgo>
+      <nombre>Sin hallazgos agudos</nombre>
+      <categoria>normal</categoria>
+      <nivelRiesgo>bajo</nivelRiesgo>
+      <descripcion>Estudio de referencia sin opacidades focales, sin derrame y sin signos de fractura.</descripcion>
+    </hallazgo>
+    <rs>
+      <lr name="imagen">resources/finding-normal.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-cxr-001" name="apareceEn"/>
+    </rels>
+  </o>
+
+  <o id="finding-pneumonia">
+    <hallazgo>
+      <nombre>Opacidad compatible con neumonia</nombre>
+      <categoria>infiltrado</categoria>
+      <nivelRiesgo>medio</nivelRiesgo>
+      <descripcion>Zona de mayor densidad en lobulo inferior derecho, util para demos de clasificacion y heatmaps.</descripcion>
+    </hallazgo>
+    <rs>
+      <lr name="imagen">resources/finding-pneumonia.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-cxr-002" name="apareceEn"/>
+    </rels>
+  </o>
+
+  <o id="finding-fracture">
+    <hallazgo>
+      <nombre>Fractura distal de radio</nombre>
+      <categoria>trauma-oseo</categoria>
+      <nivelRiesgo>alto</nivelRiesgo>
+      <descripcion>Discontinuidad cortical focal en el tercio distal del radio para ejemplos de deteccion de trauma.</descripcion>
+    </hallazgo>
+    <rs>
+      <lr name="imagen">resources/finding-fracture.png</lr>
+    </rs>
+    <rels>
+      <rel ref="study-xr-003" name="apareceEn"/>
+    </rels>
+  </o>
+</dc>

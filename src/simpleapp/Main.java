@@ -23,6 +23,7 @@ import java.util.zip.ZipOutputStream;
 
 public class Main {
     private static final String PREF_LAST_DIR = "lastChooserDir";
+    private static final String RECORD_COLLECTION_ROOT = "recordCollection";
     private final JFrame frame = new JFrame("Procesador XML/XSLT - Colecciones");
     private final JLabel status = new JLabel("Listo");
     private final JTextArea previewArea = new JTextArea();
@@ -35,6 +36,7 @@ public class Main {
     private Path extractedDir;
     private Document collectionDoc;
     private String lastResultText;
+    private String lastResultRootName;
     private File lastChooserDir;
     private final Preferences prefs = Preferences.userNodeForPackage(Main.class);
 
@@ -109,13 +111,10 @@ public class Main {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Seleccionar ZIP de colección");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ZIP", "zip"));
-        if (lastChooserDir != null) {
-            chooser.setCurrentDirectory(lastChooserDir);
-        }
+        applyLastChooserDir(chooser);
         if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             selectedZip = chooser.getSelectedFile();
-            lastChooserDir = selectedZip.getParentFile();
-            persistLastChooserDir();
+            rememberChooserDir(selectedZip);
             status.setText("ZIP seleccionado: " + selectedZip.getName());
             loadZip(selectedZip);
         }
@@ -125,13 +124,10 @@ public class Main {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Seleccionar hoja XSLT");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XSL/XSLT", "xsl", "xslt"));
-        if (lastChooserDir != null) {
-            chooser.setCurrentDirectory(lastChooserDir);
-        }
+        applyLastChooserDir(chooser);
         if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             selectedXslt = chooser.getSelectedFile();
-            lastChooserDir = selectedXslt.getParentFile();
-            persistLastChooserDir();
+            rememberChooserDir(selectedXslt);
             status.setText("XSLT seleccionado: " + selectedXslt.getName());
         }
     }
@@ -148,6 +144,20 @@ public class Main {
     private void persistLastChooserDir() {
         if (lastChooserDir == null) return;
         prefs.put(PREF_LAST_DIR, lastChooserDir.getAbsolutePath());
+    }
+
+    private void applyLastChooserDir(JFileChooser chooser) {
+        if (lastChooserDir != null) {
+            chooser.setCurrentDirectory(lastChooserDir);
+        }
+    }
+
+    private void rememberChooserDir(File file) {
+        if (file == null) return;
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        if (dir == null || !dir.isDirectory()) return;
+        lastChooserDir = dir;
+        persistLastChooserDir();
     }
 
     private void loadZip(File zip) {
@@ -170,11 +180,13 @@ public class Main {
             previewArea.setText(XmlUtils.toPrettyString(collectionDoc));
             buildTree(collectionDoc);
             lastResultText = null;
+            lastResultRootName = null;
             exportBtn.setEnabled(false);
             status.setText("Coleccion valida: " + xml.getFileName());
         } catch (Exception ex) {
             setError("Error al cargar ZIP: " + ex.getMessage());
             lastResultText = null;
+            lastResultRootName = null;
             exportBtn.setEnabled(false);
             nodeDetailArea.setText("Selecciona un nodo para ver su detalle XML.");
         }
@@ -191,6 +203,9 @@ public class Main {
         }
         XsltExtensions.resetConvertedFiles();
         try {
+            String sourceRootName = collectionDoc.getDocumentElement() != null
+                    ? collectionDoc.getDocumentElement().getNodeName()
+                    : "desconocido";
             Document result = XmlUtils.transform(collectionDoc, selectedXslt.toPath());
             boolean validated = false;
             if (XmlUtils.isCollectionDocument(result)) {
@@ -198,16 +213,21 @@ public class Main {
                 validated = true;
             }
             String formatted = XmlUtils.toPrettyString(result);
+            collectionDoc = result;
             previewArea.setText(formatted);
+            buildTree(collectionDoc);
             lastResultText = formatted;
+            lastResultRootName = collectionDoc.getDocumentElement() != null
+                    ? collectionDoc.getDocumentElement().getNodeName()
+                    : null;
             exportBtn.setEnabled(true);
+            String rootName = lastResultRootName != null ? lastResultRootName : "desconocido";
             if (validated) {
-                status.setText("Transformacion valida segun XSD");
+                status.setText("Transformacion aplicada sobre " + sourceRootName + " -> " + rootName
+                        + " (validada segun XSD)");
             } else {
-                String rootName = result.getDocumentElement() != null
-                        ? result.getDocumentElement().getNodeName()
-                        : "desconocido";
-                status.setText("Transformacion aplicada (sin validacion, raiz: " + rootName + ")");
+                status.setText("Transformacion aplicada sobre " + sourceRootName + " -> " + rootName
+                        + " (sin validacion)");
             }
 
             Path bridgeDir = XmlUtils.getLastBridgeDir();
@@ -220,6 +240,7 @@ public class Main {
         } catch (Exception ex) {
             setError("Error al transformar: " + ex.getMessage());
             lastResultText = null;
+            lastResultRootName = null;
             exportBtn.setEnabled(false);
         }
     }
@@ -229,6 +250,7 @@ public class Main {
         selectedXslt = null;
         collectionDoc = null;
         lastResultText = null;
+        lastResultRootName = null;
         previewArea.setText("");
         tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Colección")));
         clearExtractedDir();
@@ -246,6 +268,21 @@ public class Main {
     }
 
     private void buildTree(Document doc) {
+        if (doc == null || doc.getDocumentElement() == null) {
+            tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Colección")));
+            nodeDetailArea.setText("Selecciona un nodo para ver su detalle XML.");
+            return;
+        }
+        if (!XmlUtils.isCollectionDocument(doc)) {
+            DefaultMutableTreeNode rootNode = buildGenericTreeNode(doc.getDocumentElement());
+            tree.setModel(new DefaultTreeModel(rootNode));
+            for (int i = 0; i < tree.getRowCount(); i++) tree.expandRow(i);
+            if (tree.getRowCount() > 0) {
+                tree.setSelectionRow(0);
+                showSelectedNodeDetails();
+            }
+            return;
+        }
         Element root = doc.getDocumentElement();
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new NodeInfo(root.getTagName(), root));
 
@@ -316,6 +353,31 @@ public class Main {
         }
     }
 
+    private DefaultMutableTreeNode buildGenericTreeNode(Element element) {
+        DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(
+                new NodeInfo(buildGenericLabel(element), element));
+        for (Node child = element.getFirstChild(); child != null; child = child.getNextSibling()) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                treeNode.add(buildGenericTreeNode((Element) child));
+            }
+        }
+        return treeNode;
+    }
+
+    private String buildGenericLabel(Element element) {
+        StringBuilder label = new StringBuilder(element.getTagName());
+        appendAttributeLabel(label, "id", element.getAttribute("id"));
+        appendAttributeLabel(label, "name", element.getAttribute("name"));
+        appendAttributeLabel(label, "type", element.getAttribute("type"));
+        appendAttributeLabel(label, "ref", element.getAttribute("ref"));
+        return label.toString();
+    }
+
+    private void appendAttributeLabel(StringBuilder label, String name, String value) {
+        if (value == null || value.isBlank()) return;
+        label.append(" [").append(name).append('=').append(value).append(']');
+    }
+
     private void showSelectedNodeDetails() {
         if (tree.getSelectionPath() == null) {
             nodeDetailArea.setText("Selecciona un nodo para ver su detalle XML.");
@@ -348,21 +410,55 @@ public class Main {
         }
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Guardar resultado transformado");
-        chooser.setSelectedFile(new File("resultado.zip"));
-        chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ZIP (coleccion transformada)", "zip"));
-        chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("HTML o XML", "html", "htm", "xml"));
-        chooser.setFileFilter(chooser.getChoosableFileFilters()[0]);
+        boolean isHtml = "html".equalsIgnoreCase(lastResultRootName);
+        boolean isRecord = "record".equalsIgnoreCase(lastResultRootName)
+                || "records".equalsIgnoreCase(lastResultRootName);
+        boolean isRecordCollection = RECORD_COLLECTION_ROOT.equalsIgnoreCase(lastResultRootName);
+        var zipFilter = new javax.swing.filechooser.FileNameExtensionFilter("ZIP (resultado + recursos)", "zip");
+        var xmlFilter = new javax.swing.filechooser.FileNameExtensionFilter("XML", "xml");
+        var htmlFilter = new javax.swing.filechooser.FileNameExtensionFilter("HTML", "html", "htm", "xhtml");
+        chooser.addChoosableFileFilter(zipFilter);
+        chooser.addChoosableFileFilter(xmlFilter);
+        chooser.addChoosableFileFilter(htmlFilter);
+        chooser.setAcceptAllFileFilterUsed(false);
+        applyLastChooserDir(chooser);
+        if (isHtml) {
+            chooser.setSelectedFile(new File("resultado.html"));
+            chooser.setFileFilter(htmlFilter);
+        } else if (isRecord) {
+            chooser.setSelectedFile(new File("records.zip"));
+            chooser.setFileFilter(zipFilter);
+        } else if (isRecordCollection) {
+            chooser.setSelectedFile(new File("record-collection.zip"));
+            chooser.setFileFilter(zipFilter);
+        } else {
+            chooser.setSelectedFile(new File("resultado.zip"));
+            chooser.setFileFilter(zipFilter);
+        }
         if (chooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
             File target = chooser.getSelectedFile();
             try {
                 Path targetPath = target.toPath();
-                boolean asZip = target.getName().toLowerCase(Locale.ROOT).endsWith(".zip");
+                String lower = targetPath.getFileName().toString().toLowerCase(Locale.ROOT);
+                boolean zipSelected = chooser.getFileFilter() == zipFilter;
+                boolean htmlSelected = chooser.getFileFilter() == htmlFilter;
+                boolean asZip = lower.endsWith(".zip") || (zipSelected && !lower.endsWith(".xml")
+                        && !lower.endsWith(".html") && !lower.endsWith(".htm") && !lower.endsWith(".xhtml"));
                 if (asZip) {
+                    if (!lower.endsWith(".zip")) {
+                        targetPath = targetPath.resolveSibling(targetPath.getFileName().toString() + ".zip");
+                    }
                     exportAsZip(targetPath);
                 } else {
+                    if ((isHtml || htmlSelected) && !(lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".xhtml"))) {
+                        targetPath = targetPath.resolveSibling(targetPath.getFileName().toString() + ".html");
+                    } else if (!isHtml && !lower.endsWith(".xml")) {
+                        targetPath = targetPath.resolveSibling(targetPath.getFileName().toString() + ".xml");
+                    }
                     Files.write(targetPath, lastResultText.getBytes(StandardCharsets.UTF_8));
                 }
-                status.setText("Resultado exportado: " + target.getName());
+                rememberChooserDir(targetPath.toFile());
+                status.setText("Resultado exportado: " + targetPath.getFileName());
             } catch (Exception ex) {
                 setError("No se pudo exportar: " + ex.getMessage());
             }
@@ -372,7 +468,14 @@ public class Main {
     private void exportAsZip(Path target) throws Exception {
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(target))) {
             // Resultado transformado
-            zos.putNextEntry(new ZipEntry("transformed.xml"));
+            String transformedName = "html".equalsIgnoreCase(lastResultRootName)
+                    ? "transformed.html"
+                    : (RECORD_COLLECTION_ROOT.equalsIgnoreCase(lastResultRootName)
+                    ? "record-collection.xml"
+                    : ("record".equalsIgnoreCase(lastResultRootName) || "records".equalsIgnoreCase(lastResultRootName)
+                    ? "records.xml"
+                    : "transformed.xml"));
+            zos.putNextEntry(new ZipEntry(transformedName));
             zos.write(lastResultText.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
 

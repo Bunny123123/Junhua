@@ -1,0 +1,12 @@
+Sample source:
+  - curated movie showcase for generic record transformation
+  - local image resources generated for poster, author portrait and character caricature
+Build date:
+  - 2026-03-23
+Contents:
+  - 3 peliculas
+  - 3 autores
+  - 6 personajes
+Goal:
+  - demonstrate how a movie collection can be transformed to records/record/field
+  - make the external viewer feel like a ficha with image, summary and related metadata

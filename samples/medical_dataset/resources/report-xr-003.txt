@@ -1,0 +1,6 @@
+﻿Study: XR-003
+Summary: Distal radius fracture with mild angulation.
+Key points:
+- focal cortical break
+- ulna preserved
+- trauma workflow example

@@ -1,0 +1,6 @@
+﻿Study: CXR-001
+Summary: No acute cardiopulmonary abnormality.
+Key points:
+- clear lungs
+- no pleural effusion
+- normal cardiac silhouette

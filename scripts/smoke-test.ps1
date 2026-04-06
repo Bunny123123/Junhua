@@ -61,6 +61,57 @@ public class PluginSmokeTest {
     if (!text.contains("Plugin externo cargado desde JAR")) {
       throw new RuntimeException("No se encontro salida del plugin externo en la transformacion");
     }
+
+    Path recordCollectionXsl = Paths.get("samples", "collection_to_record_collection.xsl");
+    Path viewerRecordXsl = Paths.get("samples", "record_collection_to_viewer_record.xsl");
+    Path directRecordXsl = Paths.get("samples", "collection_to_record.xsl");
+
+    Document recordCollectionResult = XmlUtils.transform(source, recordCollectionXsl);
+    String recordCollectionText = XmlUtils.toPrettyString(recordCollectionResult);
+    if (!recordCollectionText.contains("<recordCollection")) {
+      throw new RuntimeException("La transformacion intermedia no produjo la raiz <recordCollection>");
+    }
+    if (!recordCollectionText.contains("<record id=\"l1\"")) {
+      throw new RuntimeException("La transformacion intermedia no produjo el record del libro");
+    }
+    if (!recordCollectionText.contains("<metadata>")) {
+      throw new RuntimeException("La transformacion intermedia no produjo el bloque <metadata>");
+    }
+
+    Document viewerRecordResult = XmlUtils.transform(recordCollectionResult, viewerRecordXsl);
+    String viewerRecordText = XmlUtils.toPrettyString(viewerRecordResult);
+    if (!viewerRecordText.contains("<records")) {
+      throw new RuntimeException("La transformacion al formato del visor no produjo la raiz <records>");
+    }
+    if (!viewerRecordText.contains("<record id=\"l1\"")) {
+      throw new RuntimeException("La transformacion al formato del visor no produjo el record del libro");
+    }
+    if (!viewerRecordText.contains("field name=\"titulo\"")) {
+      throw new RuntimeException("La transformacion al formato del visor no produjo fields esperados");
+    }
+
+    Document directRecordResult = XmlUtils.transform(source, directRecordXsl);
+    String directRecordText = XmlUtils.toPrettyString(directRecordResult);
+    if (!directRecordText.contains("<records")) {
+      throw new RuntimeException("La transformacion directa no produjo la raiz <records>");
+    }
+
+    Path movieXml = Paths.get("samples", "movie_collection", "collection.xml");
+    Document movieSource = XmlUtils.parse(movieXml);
+    XmlUtils.validateCollection(movieSource);
+    Document movieRecordCollectionResult = XmlUtils.transform(movieSource, recordCollectionXsl);
+    String movieRecordCollectionText = XmlUtils.toPrettyString(movieRecordCollectionResult);
+    if (!movieRecordCollectionText.contains("<record id=\"movie-matrix\"")) {
+      throw new RuntimeException("La coleccion de peliculas no produjo el record intermedio esperado");
+    }
+    Document movieRecordResult = XmlUtils.transform(movieRecordCollectionResult, viewerRecordXsl);
+    String movieRecordText = XmlUtils.toPrettyString(movieRecordResult);
+    if (!movieRecordText.contains("<record id=\"movie-matrix\"")) {
+      throw new RuntimeException("La coleccion de peliculas no produjo el record del visor esperado");
+    }
+    if (!movieRecordText.contains("resources/poster-matrix.png")) {
+      throw new RuntimeException("La coleccion de peliculas no arrastro los recursos visuales");
+    }
     System.out.println("OK plugin transform");
   }
 }

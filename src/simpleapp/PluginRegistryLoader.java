@@ -82,6 +82,7 @@ public final class PluginRegistryLoader {
             addBundleDirJars(bundleDir.toString(), baseDir, jarUrls);
         }
         addBundleEntries(root, baseDir, jarUrls);
+        addGlobalDependencies(root, baseDir, bundleDir, jarUrls);
 
         List<PluginEntry> entries = parsePluginEntries(root, baseDir, bundleDir, jarUrls);
         ClassLoader pluginLoader = buildClassLoader(jarUrls);
@@ -162,6 +163,27 @@ public final class PluginRegistryLoader {
         }
     }
 
+    private static void addGlobalDependencies(Element root, Path baseDir, Path bundleDir, Set<URL> jarUrls)
+            throws Exception {
+        if (root == null) return;
+
+        for (Element dependency : childElements(root, "dependency")) {
+            String rawPath = dependencyPath(dependency);
+            if (isBlank(rawPath)) continue;
+            addDependencyJar(rawPath, baseDir, bundleDir, jarUrls,
+                    "dependencia global");
+        }
+
+        for (Element depsContainer : childElements(root, "dependencies")) {
+            for (Element dependency : childElements(depsContainer, "dependency")) {
+                String rawPath = dependencyPath(dependency);
+                if (isBlank(rawPath)) continue;
+                addDependencyJar(rawPath, baseDir, bundleDir, jarUrls,
+                        "dependencia global");
+            }
+        }
+    }
+
     private static List<PluginEntry> parsePluginEntries(Element root, Path baseDir,
                                                         Path bundleDir, Set<URL> jarUrls) throws Exception {
         List<PluginEntry> entries = new ArrayList<>();
@@ -194,12 +216,13 @@ public final class PluginRegistryLoader {
             }
 
             if (!isBlank(jarPath)) {
-                Path resolvedJar = resolveJarPath(jarPath, bundleDir, baseDir);
-                if (!Files.exists(resolvedJar)) {
-                    throw new IllegalArgumentException("No existe el jar del plugin '" + elementName + "': "
-                            + resolvedJar.toAbsolutePath());
-                }
-                jarUrls.add(resolvedJar.toUri().toURL());
+                addDependencyJar(jarPath, baseDir, bundleDir, jarUrls,
+                        "jar del plugin '" + elementName + "'");
+            }
+
+            for (String dependency : parsePluginDependencies(plugin)) {
+                addDependencyJar(dependency, baseDir, bundleDir, jarUrls,
+                        "dependencia del plugin '" + elementName + "'");
             }
 
             entries.add(new PluginEntry(elementName.trim(), className.trim(), normalize(methodName)));
@@ -288,6 +311,79 @@ public final class PluginRegistryLoader {
             return bundleDir.resolve(raw).normalize();
         }
         return resolvePath(rawPath, baseDir);
+    }
+
+    private static void addDependencyJar(String rawPath, Path baseDir, Path bundleDir,
+                                         Set<URL> jarUrls, String origin) throws Exception {
+        Path resolved = resolveJarPath(rawPath, bundleDir, baseDir);
+        if (!Files.exists(resolved) || !Files.isRegularFile(resolved)) {
+            throw new IllegalArgumentException("No existe " + origin + ": "
+                    + resolved.toAbsolutePath());
+        }
+        jarUrls.add(resolved.toUri().toURL());
+    }
+
+    private static List<String> parsePluginDependencies(Element plugin) {
+        List<String> paths = new ArrayList<>();
+        if (plugin == null) return paths;
+
+        String inline = firstNonBlank(
+                normalize(plugin.getAttribute("dependencies")),
+                normalize(plugin.getAttribute("deps"))
+        );
+        if (!isBlank(inline)) {
+            paths.addAll(splitPathList(inline));
+        }
+
+        for (Element dependency : childElements(plugin, "dependency")) {
+            String rawPath = dependencyPath(dependency);
+            if (!isBlank(rawPath)) {
+                paths.add(rawPath);
+            }
+        }
+        for (Element depsContainer : childElements(plugin, "dependencies")) {
+            for (Element dependency : childElements(depsContainer, "dependency")) {
+                String rawPath = dependencyPath(dependency);
+                if (!isBlank(rawPath)) {
+                    paths.add(rawPath);
+                }
+            }
+        }
+        return paths;
+    }
+
+    private static String dependencyPath(Element dependency) {
+        if (dependency == null) return null;
+        return firstNonBlank(
+                normalize(dependency.getAttribute("path")),
+                normalize(dependency.getAttribute("jar")),
+                normalize(dependency.getTextContent())
+        );
+    }
+
+    private static List<String> splitPathList(String text) {
+        List<String> result = new ArrayList<>();
+        if (isBlank(text)) return result;
+        String[] tokens = text.split("[,;]");
+        for (String token : tokens) {
+            String normalized = normalize(token);
+            if (!isBlank(normalized)) {
+                result.add(normalized);
+            }
+        }
+        return result;
+    }
+
+    private static List<Element> childElements(Element parent, String childName) {
+        List<Element> elements = new ArrayList<>();
+        if (parent == null) return elements;
+        for (Node node = parent.getFirstChild(); node != null; node = node.getNextSibling()) {
+            if (node instanceof Element element
+                    && (childName == null || childName.equals(element.getTagName()))) {
+                elements.add(element);
+            }
+        }
+        return elements;
     }
 
     private static String firstNonBlank(String... values) {

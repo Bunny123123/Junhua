@@ -2,10 +2,13 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $srcRoot = Join-Path $repoRoot "plugins\sample-plugin\src"
+$depsSrcRoot = Join-Path $repoRoot "plugins\sample-plugin\deps-src"
 $buildRoot = Join-Path $repoRoot "plugins\sample-plugin\build"
 $classesDir = Join-Path $buildRoot "classes"
+$depsClassesDir = Join-Path $buildRoot "deps-classes"
 $bundleDir = Join-Path $repoRoot "plugins\bundle"
 $jarPath = Join-Path $bundleDir "mi-plugin.jar"
+$depsJarPath = Join-Path $bundleDir "mi-plugin-deps.jar"
 $jarCmd = "jar"
 
 if ($env:JAVA_HOME) {
@@ -41,10 +44,24 @@ if ($jarCmd -eq "jar") {
 }
 
 New-Item -ItemType Directory -Force -Path $classesDir | Out-Null
+New-Item -ItemType Directory -Force -Path $depsClassesDir | Out-Null
 New-Item -ItemType Directory -Force -Path $bundleDir | Out-Null
 
+Write-Host "Compilando dependencias del plugin..." -ForegroundColor Cyan
+javac -d $depsClassesDir `
+  (Get-ChildItem -Path $depsSrcRoot -Recurse -Filter *.java | ForEach-Object { $_.FullName })
+if ($LASTEXITCODE -ne 0) {
+  throw "Fallo la compilacion de dependencias del plugin (javac)."
+}
+
+Write-Host "Empaquetando dependencia mi-plugin-deps.jar..." -ForegroundColor Cyan
+& $jarCmd --create --file $depsJarPath -C $depsClassesDir .
+if ($LASTEXITCODE -ne 0) {
+  throw "Fallo el empaquetado de mi-plugin-deps.jar: $depsJarPath"
+}
+
 Write-Host "Compilando plugin externo..." -ForegroundColor Cyan
-javac -cp "$repoRoot\lib\xalan-2.7.3.jar;$repoRoot\lib\serializer-2.7.3.jar" `
+javac -cp "$repoRoot\lib\xalan-2.7.3.jar;$repoRoot\lib\serializer-2.7.3.jar;$depsJarPath" `
   -d $classesDir `
   (Get-ChildItem -Path $srcRoot -Recurse -Filter *.java | ForEach-Object { $_.FullName })
 if ($LASTEXITCODE -ne 0) {
@@ -58,3 +75,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "OK: $jarPath" -ForegroundColor Green
+Write-Host "OK: $depsJarPath" -ForegroundColor Green

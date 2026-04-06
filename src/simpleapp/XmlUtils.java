@@ -1,7 +1,10 @@
 package simpleapp;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Node;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSSerializer;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -51,6 +54,9 @@ public class XmlUtils {
 
     public static String nodeToPrettyString(Node node) throws Exception {
         if (node == null) return "";
+        if (node instanceof Document && isHtmlDocument((Document) node)) {
+            return serializeHtmlAsXml((Document) node);
+        }
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer t = tf.newTransformer();
         t.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -61,6 +67,28 @@ public class XmlUtils {
         StringWriter sw = new StringWriter();
         t.transform(new DOMSource(node), new StreamResult(sw));
         return sw.toString();
+    }
+
+    private static boolean isHtmlDocument(Document doc) {
+        if (doc == null || doc.getDocumentElement() == null) return false;
+        String root = doc.getDocumentElement().getNodeName();
+        return root != null && "html".equalsIgnoreCase(root);
+    }
+
+    private static String serializeHtmlAsXml(Document doc) throws Exception {
+        DOMImplementation impl = doc.getImplementation();
+        DOMImplementationLS ls = impl != null ? (DOMImplementationLS) impl.getFeature("LS", "3.0") : null;
+        if (ls == null) {
+            throw new IllegalStateException("No se encontro serializer DOM LS para salida HTML");
+        }
+        LSSerializer serializer = ls.createLSSerializer();
+        if (serializer.getDomConfig().canSetParameter("format-pretty-print", true)) {
+            serializer.getDomConfig().setParameter("format-pretty-print", true);
+        }
+        if (serializer.getDomConfig().canSetParameter("xml-declaration", false)) {
+            serializer.getDomConfig().setParameter("xml-declaration", false);
+        }
+        return serializer.writeToString(doc);
     }
 
     public static Document transform(Document source, Path xsltPath) throws Exception {

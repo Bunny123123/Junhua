@@ -1,0 +1,6 @@
+﻿Study: CXR-002
+Summary: Focal right basilar opacity.
+Key points:
+- probable lower lobe consolidation
+- no visible pneumothorax
+- correlate with symptoms and labs

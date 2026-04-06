@@ -1,6 +1,6 @@
 * Funcionamiento General
 
-La ventana principal (Main.java) construye la barra de herramientas con los botones "Elegir ZIP", "Elegir XSLT", "Transformar", "Exportar" y "Limpiar", ademas de dos paneles principales: a la izquierda un JTree con la estructura de la coleccion y un panel inferior de detalle (nodeDetailArea), y a la derecha la vista previa completa. El estado vivo se guarda en los campos selectedZip, selectedXslt, extractedDir, collectionDoc y lastResultText para coordinar carga, transformacion, validacion y exportacion.
+La ventana principal (Main.java) construye la barra de herramientas con los botones "Elegir ZIP", "Elegir XSLT", "Transformar", "Exportar" y "Limpiar", ademas de dos paneles principales: a la izquierda un JTree con la estructura de la coleccion o del XML transformado y un panel inferior de detalle (nodeDetailArea), y a la derecha la vista previa completa. El estado vivo se guarda en los campos selectedZip, selectedXslt, extractedDir, collectionDoc y lastResultText para coordinar carga, transformacion, validacion, encadenado de XSLT y exportacion.
 
 Cada nodo del arbol almacena una referencia DOM (NodeInfo) para poder mostrar el XML exacto asociado. Un TreeSelectionListener invoca showSelectedNodeDetails(), que delega en XmlUtils.nodeToPrettyString() para formatear el fragmento seleccionado y renderizarlo en el panel de detalle.
 
@@ -12,7 +12,7 @@ chooseZip() abre el selector de archivos y delega en loadZip(), que crea un dire
 
 * Seleccion de XSLT, transformacion y validacion
 
-chooseXslt() solo guarda la ruta seleccionada. Cuando se pulsa "Transformar", el metodo transform() comprueba que haya XML y XSLT, ejecuta XmlUtils.transform() y decide si el resultado sigue siendo una coleccion mediante XmlUtils.isCollectionDocument(). Si la raiz es `dc`, se valida con XmlUtils.validateCollection(); de lo contrario se omite la validacion pero se deja constancia en la barra de estado. El DOM resultante se convierte a texto con toPrettyString(), se guarda en lastResultText y se habilita el boton "Exportar".
+chooseXslt() solo guarda la ruta seleccionada. Cuando se pulsa "Transformar", el metodo transform() comprueba que haya XML y XSLT, ejecuta XmlUtils.transform() sobre el documento activo y decide si el resultado sigue siendo una coleccion mediante XmlUtils.isCollectionDocument(). Si la raiz es `dc`, se valida con XmlUtils.validateCollection(); de lo contrario se omite la validacion pero se deja constancia en la barra de estado. El DOM resultante pasa a ser la nueva fuente activa, se convierte a texto con toPrettyString(), se guarda en lastResultText y se habilita el boton "Exportar". Esto permite aplicar varias XSLT seguidas, por ejemplo `dc -> recordCollection -> records`.
 
 export() abre un JFileChooser y escribe lastResultText en UTF-8 usando Files.write(). Si ocurre cualquier problema, se reutiliza setError() para mostrar el mensaje.
 
